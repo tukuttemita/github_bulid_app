@@ -1,40 +1,418 @@
 <!doctype html>
-<html lang="en">
+<html lang="ja">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#f3f4f0">
-    <title>HalloWorld</title>
+    <meta name="theme-color" content="#0b1016">
+    <title>株式会社つくってみた｜暮らしの「あったらいいな」を、アプリにする。</title>
+    <meta name="description" content="パスワード管理、賞味期限管理、価格比較。日常のちょっとした不便を解決するアプリを、企画から開発、運営まで。">
+    <link rel="icon" href="assets/favicon-32.png">
     <style>
       :root {
-        color-scheme: light;
-        font-family: Georgia, "Times New Roman", serif;
-        background: #f3f4f0;
-        color: #173f35;
+        --bg: #0b1016;
+        --surface: #141b24;
+        --surface-2: #1b2430;
+        --line: #26313f;
+        --text: #e9eef4;
+        --muted: #93a1b2;
+        --accent: #7cf7c4;
+        --accent-ink: #06231a;
+        --radius: 20px;
+        --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+        --sans: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Noto Sans JP", system-ui, sans-serif;
       }
 
-      * {
-        box-sizing: border-box;
-      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; scroll-padding-top: 88px; }
 
       body {
-        display: grid;
-        min-height: 100vh;
-        min-height: 100svh;
         margin: 0;
-        place-items: center;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--sans);
+        line-height: 1.8;
+        -webkit-font-smoothing: antialiased;
       }
 
-      h1 {
-        margin: 0;
-        font-size: clamp(2.5rem, 12vw, 7rem);
-        font-weight: 500;
+      a { color: inherit; text-decoration: none; }
+      a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+      img { display: block; max-width: 100%; }
+
+      .wrap { width: min(1160px, 100% - 48px); margin-inline: auto; }
+
+      .eyebrow {
+        font-family: var(--mono);
+        font-size: 0.8rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+
+      h1, h2, h3, p { margin: 0; }
+
+      /* header */
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        backdrop-filter: blur(14px);
+        background: rgba(11, 16, 22, 0.78);
+        border-bottom: 1px solid var(--line);
+      }
+      .bar { display: flex; align-items: center; justify-content: space-between; height: 68px; }
+      .brand { display: flex; align-items: center; gap: 12px; font-weight: 700; letter-spacing: 0.04em; }
+      .brand .tile { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 11px; background: #f4efe8; }
+      .brand img { width: 28px; height: 28px; }
+      nav ul { display: flex; gap: 28px; margin: 0; padding: 0; list-style: none; font-size: 0.9rem; color: var(--muted); }
+      nav a:hover { color: var(--text); }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        background: var(--accent);
+        color: var(--accent-ink);
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+      .pill:hover { transform: translateY(-2px); box-shadow: 0 10px 30px -8px rgba(124, 247, 196, 0.55); }
+      .pill.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
+      .pill.ghost:hover { border-color: var(--accent); box-shadow: none; }
+
+      /* hero */
+      .hero { position: relative; overflow: hidden; padding: 96px 0 112px; }
+      .hero::before {
+        content: "";
+        position: absolute;
+        inset: -20% -10% auto auto;
+        width: 640px;
+        height: 640px;
+        background: radial-gradient(closest-side, rgba(124, 247, 196, 0.18), transparent);
+        pointer-events: none;
+      }
+      .hero-grid { position: relative; display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 56px; align-items: center; }
+      .hero h1 { margin-top: 20px; font-size: clamp(1.7rem, 4vw, 3.2rem); line-height: 1.35; font-weight: 800; letter-spacing: -0.01em; }
+      .hero h1 em { font-style: normal; color: var(--accent); }
+      .hero .lead { margin-top: 28px; max-width: 34em; color: var(--muted); }
+      .hero .cta { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 36px; }
+      .chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 44px; padding: 0; list-style: none; }
+      .chips li { padding: 6px 14px; border: 1px solid var(--line); border-radius: 999px; font-size: 0.8rem; color: var(--muted); }
+
+      .stack { position: relative; height: 440px; }
+      .stack img {
+        position: absolute;
+        width: 210px;
+        height: 210px;
+        border-radius: 46px;
+        border: 1px solid var(--line);
+        box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.7);
+        animation: float 7s ease-in-out infinite;
+      }
+      .stack img:nth-child(1) { top: 0; left: 6%; transform: rotate(-8deg); }
+      .stack img:nth-child(2) { top: 30px; right: 2%; transform: rotate(7deg); animation-delay: -2s; }
+      .stack img:nth-child(3) { bottom: 0; left: 24%; transform: rotate(3deg); animation-delay: -4s; }
+      @keyframes float { 50% { translate: 0 -14px; } }
+
+      /* sections */
+      section { padding: 104px 0; }
+      .head { display: grid; grid-template-columns: 1fr 1fr; gap: 24px 56px; align-items: end; margin-bottom: 56px; }
+      .head h2 { margin-top: 12px; font-size: clamp(1.8rem, 3.6vw, 2.8rem); line-height: 1.3; font-weight: 800; }
+      .head p { color: var(--muted); }
+
+      /* services: bento */
+      .bento { display: grid; grid-template-columns: repeat(6, 1fr); gap: 18px; }
+      .card {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        padding: 28px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        transition: border-color 0.2s, transform 0.2s;
+      }
+      .card:hover { border-color: rgba(124, 247, 196, 0.5); transform: translateY(-3px); }
+      .card:nth-child(1) { grid-column: span 4; flex-direction: row; gap: 32px; background: linear-gradient(135deg, var(--surface-2), var(--surface)); }
+      .card:nth-child(2) { grid-column: span 2; }
+      .card:nth-child(3) { grid-column: span 3; }
+      .card:nth-child(4) { grid-column: span 3; }
+      .card .body { display: flex; flex-direction: column; gap: 18px; flex: 1; }
+      .card .icon { width: 84px; height: 84px; border-radius: 20px; flex: none; }
+      .card:nth-child(1) .icon { width: 148px; height: 148px; border-radius: 32px; }
+      .card .en { font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.12em; color: var(--accent); }
+      .card h3 { font-size: 1.35rem; line-height: 1.4; }
+      .card .tag { margin-top: 2px; font-weight: 700; }
+      .card p.desc { color: var(--muted); font-size: 0.92rem; }
+      .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: auto; }
+      .os { padding: 2px 10px; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--line); font-family: var(--mono); font-size: 0.72rem; color: var(--muted); }
+      .meta a { font-size: 0.85rem; font-weight: 700; color: var(--accent); }
+      .meta a:hover { text-decoration: underline; text-underline-offset: 4px; }
+
+      /* business */
+      .biz { background: var(--surface); border-block: 1px solid var(--line); }
+      .rows { border-top: 1px solid var(--line); }
+      .row { display: grid; grid-template-columns: 120px 1fr 1.4fr; gap: 32px; align-items: baseline; padding: 36px 0; border-bottom: 1px solid var(--line); }
+      .row .no { font-family: var(--mono); font-size: 3.4rem; line-height: 1; color: transparent; -webkit-text-stroke: 1px var(--accent); }
+      .row h3 { font-size: 1.4rem; }
+      .row p { color: var(--muted); }
+
+      /* company */
+      .company-grid { display: grid; grid-template-columns: 0.8fr 1.2fr; gap: 56px; }
+      .company-grid h2 { margin-top: 12px; font-size: clamp(1.8rem, 3.6vw, 2.8rem); line-height: 1.3; font-weight: 800; }
+      dl { margin: 0; border-top: 1px solid var(--line); }
+      dl div { display: grid; grid-template-columns: 8em 1fr; gap: 16px; padding: 22px 0; border-bottom: 1px solid var(--line); }
+      dt { color: var(--muted); font-size: 0.9rem; }
+      dd { margin: 0; }
+      dd a { color: var(--accent); }
+
+      /* contact */
+      .contact { padding: 0 0 104px; }
+      .band {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 40px;
+        align-items: center;
+        padding: 64px;
+        border-radius: 32px;
+        background: var(--accent);
+        color: var(--accent-ink);
+      }
+      .band .eyebrow { color: var(--accent-ink); opacity: 0.7; }
+      .band h2 { margin-top: 12px; font-size: clamp(1.8rem, 3.6vw, 2.8rem); line-height: 1.3; font-weight: 800; }
+      .band p { margin-top: 16px; }
+      .band .btn {
+        justify-self: end;
+        padding: 20px 36px;
+        border-radius: 999px;
+        background: var(--accent-ink);
+        color: var(--accent);
+        font-weight: 800;
+        transition: transform 0.2s;
+      }
+      .band .btn:hover { transform: translateX(6px); }
+
+      footer { border-top: 1px solid var(--line); padding: 40px 0; color: var(--muted); font-size: 0.85rem; }
+      .foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px; }
+      footer ul { display: flex; gap: 22px; margin: 0; padding: 0; list-style: none; }
+      footer a:hover { color: var(--text); }
+
+      @media (max-width: 900px) {
+        nav { display: none; }
+        .hero { padding: 56px 0 72px; }
+        .hero-grid, .head, .company-grid, .band { grid-template-columns: 1fr; }
+        .stack { height: 300px; }
+        .stack img { width: 150px; height: 150px; border-radius: 34px; }
+        section { padding: 72px 0; }
+        .bento { grid-template-columns: 1fr; }
+        .card:nth-child(n) { grid-column: auto; }
+        .card:nth-child(1) { flex-direction: column; gap: 18px; }
+        .card:nth-child(1) .icon { width: 96px; height: 96px; border-radius: 24px; }
+        .row { grid-template-columns: 1fr; gap: 12px; padding: 28px 0; }
+        .row .no { font-size: 2.4rem; }
+        dl div { grid-template-columns: 1fr; gap: 4px; }
+        .band { padding: 40px 28px; }
+        .band .btn { justify-self: start; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+        .stack img { animation: none; }
+        .pill, .card, .band .btn { transition: none; }
       }
     </style>
   </head>
   <body>
-    <main>
-      <h1>HalloWorld</h1>
+    <header>
+      <div class="wrap bar">
+        <a class="brand" href="#top">
+          <span class="tile"><img src="assets/logo-mark.png" alt=""></span>
+          <span>つくってみた</span>
+        </a>
+        <nav aria-label="メインナビゲーション">
+          <ul>
+            <li><a href="#services">サービス</a></li>
+            <li><a href="#business">事業内容</a></li>
+            <li><a href="#company">会社概要</a></li>
+          </ul>
+        </nav>
+        <a class="pill" href="#contact">お問い合わせ</a>
+      </div>
+    </header>
+
+    <main id="top">
+      <div class="hero">
+        <div class="wrap hero-grid">
+          <div>
+            <p class="eyebrow">Tsukuttemita Inc.</p>
+            <h1>暮らしの<br>「あったらいいな」を、<br><em>アプリ</em>にする。</h1>
+            <p class="lead">パスワード管理、賞味期限管理、価格比較——。日常のちょっとした不便を解決するアプリを、企画から開発、運営まで自分たちの手で。</p>
+            <div class="cta">
+              <a class="pill" href="#services">サービスを見る</a>
+              <a class="pill ghost" href="#contact">お問い合わせ</a>
+            </div>
+            <ul class="chips">
+              <li>2023年設立</li>
+              <li>自社アプリ開発・運営</li>
+              <li>技術顧問</li>
+            </ul>
+          </div>
+          <div class="stack" aria-hidden="true">
+            <img src="assets/icon-pass.jpg" alt="">
+            <img src="assets/icon-limit.jpg" alt="">
+            <img src="assets/icon-soco.jpg" alt="">
+          </div>
+        </div>
+      </div>
+
+      <section id="services">
+        <div class="wrap">
+          <div class="head">
+            <div>
+              <p class="eyebrow">Services</p>
+              <h2>つくって、運営している<br>アプリ。</h2>
+            </div>
+            <p>リリースして終わりではなく、使われ続けるサービスとして運営しています。</p>
+          </div>
+
+          <div class="bento">
+            <article class="card">
+              <img class="icon" src="assets/icon-pass.jpg" alt="パスマネージャーのアイコン">
+              <div class="body">
+                <div>
+                  <p class="en">Pass Manager</p>
+                  <h3>パスマネージャー</h3>
+                </div>
+                <p class="tag">端末で完結する、安心のパスワード管理。</p>
+                <p class="desc">端末認証と指紋認証でロック。登録したパスワードを外部サーバーに預けず、お使いの端末の中だけで管理できます。</p>
+                <div class="meta">
+                  <span class="os">iOS</span><span class="os">Android</span>
+                  <a href="https://apps.apple.com/jp/app/id938502760">App Store →</a>
+                  <a href="https://play.google.com/store/apps/details?id=com.pass_manager">Google Play →</a>
+                  <a href="https://company.tukuttemita.com/apps/pass-manager/">詳しく見る →</a>
+                </div>
+              </div>
+            </article>
+
+            <article class="card">
+              <img class="icon" src="assets/icon-limit.jpg" alt="リミッターのアイコン">
+              <div>
+                <p class="en">Limiter</p>
+                <h3>リミッター</h3>
+              </div>
+              <p class="tag">賞味期限を、もう切らさない。</p>
+              <p class="desc">食品の賞味期限を登録し、期限が近づくと通知。買ったものを使い切る習慣をつくり、食品ロスを減らす賞味期限管理アプリです。</p>
+              <div class="meta">
+                <span class="os">iOS</span><span class="os">Android</span>
+                <a href="https://apps.apple.com/jp/app/id1027284532">App Store →</a>
+                <a href="https://play.google.com/store/apps/details?id=jp.labboy.limiterflutter">Google Play →</a>
+              </div>
+            </article>
+
+            <article class="card">
+              <img class="icon" src="assets/icon-soco.jpg" alt="ソコネオのアイコン">
+              <div>
+                <p class="en">soconeo</p>
+                <h3>ソコネオ</h3>
+              </div>
+              <p class="tag">その買いもの、もっと安く。</p>
+              <p class="desc">気になる商品の価格を比べて、いちばんお得な選択をサポート。かしこく買いものするための価格比較アプリです。</p>
+              <div class="meta">
+                <span class="os">iOS</span><span class="os">Android</span>
+                <a href="https://apps.apple.com/jp/app/id1120010427">App Store →</a>
+                <a href="https://play.google.com/store/apps/details?id=com.soconeo">Google Play →</a>
+              </div>
+            </article>
+
+            <article class="card">
+              <img class="icon" src="assets/icon-note.jpg" alt="みんなのノートのアイコン">
+              <div>
+                <p class="en">共有メモ</p>
+                <h3>みんなのノート</h3>
+              </div>
+              <p class="tag">チームで使える、シンプル共有メモ。</p>
+              <p class="desc">メモをかんたんに共有。チームや家族で同じノートを一緒に編集できる、シンプルな共有メモアプリです。</p>
+              <div class="meta">
+                <span class="os">iOS</span><span class="os">Android</span>
+                <a href="https://apps.apple.com/jp/app/id6449425671">App Store →</a>
+                <a href="https://play.google.com/store/apps/details?id=com.minnanonote">Google Play →</a>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="business" class="biz">
+        <div class="wrap">
+          <div class="head">
+            <div>
+              <p class="eyebrow">Business</p>
+              <h2>事業内容</h2>
+            </div>
+            <p>自社サービスで培った知見を、開発・運営・顧問の3つのかたちで提供しています。</p>
+          </div>
+          <div class="rows">
+            <div class="row">
+              <span class="no">01</span>
+              <h3>アプリケーション開発</h3>
+              <p>企画・設計から実装まで。iOS / Android のモバイルアプリを中心に、使われるプロダクトをつくります。</p>
+            </div>
+            <div class="row">
+              <span class="no">02</span>
+              <h3>アプリケーション運営</h3>
+              <p>リリース後の改善・サポート・運用まで。サービスを継続的に育て、長く使われる状態を保ちます。</p>
+            </div>
+            <div class="row">
+              <span class="no">03</span>
+              <h3>技術顧問</h3>
+              <p>プロダクト開発・技術選定の伴走支援。これまでの開発・運営の経験をもとに、チームを技術面から支えます。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="company">
+        <div class="wrap company-grid">
+          <div>
+            <p class="eyebrow">Company</p>
+            <h2>会社概要</h2>
+          </div>
+          <dl>
+            <div><dt>会社名</dt><dd>株式会社つくってみた</dd></div>
+            <div><dt>設立</dt><dd>2023年3月1日</dd></div>
+            <div><dt>代表取締役</dt><dd>中山 陽介</dd></div>
+            <div><dt>所在地</dt><dd>〒187-0003 東京都小平市鈴木町2-174-8 2F</dd></div>
+            <div><dt>事業内容</dt><dd>アプリケーション開発／アプリケーション運営／技術顧問</dd></div>
+            <div><dt>お問い合わせ</dt><dd><a href="https://forms.gle/u6NFmECMqi4Z6hhf8">お問い合わせフォーム →</a></dd></div>
+          </dl>
+        </div>
+      </section>
+
+      <div id="contact" class="contact">
+        <div class="wrap">
+          <div class="band">
+            <div>
+              <p class="eyebrow">Contact</p>
+              <h2>お気軽にご連絡ください。</h2>
+              <p>アプリの開発・運営のご相談、技術顧問のご依頼、取材など。下記のフォームよりお問い合わせください。</p>
+            </div>
+            <a class="btn" href="https://forms.gle/u6NFmECMqi4Z6hhf8">お問い合わせフォーム →</a>
+          </div>
+        </div>
+      </div>
     </main>
+
+    <footer>
+      <div class="wrap foot">
+        <p>© 2023 株式会社つくってみた / Tsukuttemita Inc. All rights reserved.</p>
+        <ul>
+          <li><a href="#services">サービス</a></li>
+          <li><a href="#business">事業内容</a></li>
+          <li><a href="#company">会社概要</a></li>
+          <li><a href="#contact">お問い合わせ</a></li>
+        </ul>
+      </div>
+    </footer>
   </body>
 </html>
