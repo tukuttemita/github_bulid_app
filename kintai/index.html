@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f5f6f8">
+    <title>日次勤怠 | 勤怠管理</title>
+    <link rel="icon" href="../assets/favicon-32.png">
+    <style>
+      :root {
+        --bg: #f5f6f8;
+        --card: #fff;
+        --line: #e4e7ec;
+        --text: #101828;
+        --muted: #667085;
+        --accent: #2563eb;
+        --accent-soft: #eff4ff;
+        --sun: #dc2626;
+        --sat: #2563eb;
+        --req: #dc2626;
+        --radius: 14px;
+        --sans: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Noto Sans JP", system-ui, sans-serif;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--sans);
+        font-size: 15px;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      h1, h2, p, dl, dd { margin: 0; }
+      button, input, select, textarea { font: inherit; color: inherit; }
+      .num { font-variant-numeric: tabular-nums; }
+
+      header { background: var(--card); border-bottom: 1px solid var(--line); }
+      .bar { display: flex; align-items: center; justify-content: space-between; width: min(1120px, 100% - 40px); height: 60px; margin-inline: auto; }
+      .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+      .logo i { width: 22px; height: 22px; border-radius: 7px; background: var(--accent); }
+      .user { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 0.9rem; }
+      .avatar { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 0.85rem; }
+
+      main { width: min(1120px, 100% - 40px); margin: 28px auto 64px; }
+      .title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; margin-bottom: 20px; }
+      .title h1 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.01em; }
+      .title p { color: var(--muted); }
+
+      .layout { display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: 20px; align-items: start; }
+      .side, .content { display: grid; gap: 20px; }
+
+      .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); }
+      .card > h2 { padding: 16px 20px; border-bottom: 1px solid var(--line); font-size: 0.95rem; font-weight: 700; }
+
+      /* calendar */
+      .cal-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 16px 16px 8px; }
+      .cal-nav button.arrow { width: 32px; height: 32px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--muted); cursor: pointer; }
+      .cal-nav button.arrow:hover { border-color: var(--accent); color: var(--accent); }
+      .cal-nav select { flex: 1; height: 32px; padding: 0 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); text-align: center; }
+      .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; padding: 8px 16px 16px; text-align: center; }
+      .cal .w { padding: 4px 0; color: var(--muted); font-size: 0.78rem; font-weight: 600; }
+      .cal .w:first-child { color: var(--sun); }
+      .cal .w:last-child { color: var(--sat); }
+      .cal button { aspect-ratio: 1; border: 0; border-radius: 10px; background: none; cursor: pointer; }
+      .cal button:hover { background: var(--accent-soft); }
+      .cal button:nth-child(7n+8) { color: var(--sun); }
+      .cal button:nth-child(7n+14) { color: var(--sat); }
+      .cal button[aria-current="date"] { background: var(--accent); color: #fff; font-weight: 700; }
+      .cal button.today::after { content: ""; display: block; width: 4px; height: 4px; margin: -2px auto 0; border-radius: 50%; background: var(--accent); }
+
+      /* totals */
+      .totals dl { padding: 4px 20px 12px; }
+      .totals dl div { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 0.9rem; }
+      .totals dl div:last-child { border-bottom: 0; }
+      .totals dt { color: var(--muted); }
+      .totals dd { font-weight: 600; }
+
+      /* daily */
+      .plan { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 20px; }
+      .plan > div { padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px; }
+      .plan small { display: block; color: var(--muted); font-size: 0.78rem; }
+      .plan b { display: block; margin-top: 2px; font-weight: 600; }
+      .plan .empty { color: var(--muted); font-weight: 400; }
+      .metrics { display: grid; grid-template-columns: repeat(6, 1fr); border-top: 1px solid var(--line); }
+      .metrics div { padding: 14px 16px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+      .metrics div:nth-child(6n) { border-right: 0; }
+      .metrics div:nth-last-child(-n+6) { border-bottom: 0; }
+      .metrics small { display: block; min-height: 2.6em; color: var(--muted); font-size: 0.74rem; line-height: 1.3; }
+      .metrics b { display: block; margin-top: 4px; font-weight: 600; color: #98a2b3; }
+
+      /* form */
+      .form { padding: 4px 24px 24px; }
+      .field { display: grid; grid-template-columns: 160px minmax(0, 1fr); gap: 8px 24px; padding: 18px 0; border-bottom: 1px solid var(--line); }
+      .field:last-child { border-bottom: 0; }
+      .field > label, .field > .lbl { padding-top: 8px; font-size: 0.9rem; font-weight: 600; }
+      .req { margin-left: 6px; padding: 1px 6px; border-radius: 4px; background: #fef3f2; color: var(--req); font-size: 0.7rem; font-weight: 700; }
+      .ctl { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+      input, select, textarea {
+        height: 40px;
+        padding: 0 12px;
+        border: 1px solid #d0d5dd;
+        border-radius: 8px;
+        background: #fff;
+      }
+      textarea { width: 100%; height: auto; min-height: 96px; padding: 10px 12px; resize: vertical; }
+      input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+      input.time { width: 112px; text-align: center; }
+      input.blank { border-style: dashed; background: #fafbfc; }
+      .sep { color: var(--muted); }
+      .hint { flex-basis: 100%; color: var(--muted); font-size: 0.82rem; }
+      .btn { height: 40px; padding: 0 16px; border: 1px solid #d0d5dd; border-radius: 8px; background: #fff; font-weight: 600; cursor: pointer; }
+      .btn:hover { border-color: var(--accent); color: var(--accent); }
+      .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+      .chip { padding: 4px 12px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 0.85rem; font-weight: 600; }
+
+      @media (max-width: 900px) {
+        .layout { grid-template-columns: 1fr; }
+        .metrics { grid-template-columns: repeat(3, 1fr); }
+        .metrics div:nth-child(6n) { border-right: 1px solid var(--line); }
+        .metrics div:nth-child(3n) { border-right: 0; }
+        .metrics div:nth-last-child(-n+6) { border-bottom: 1px solid var(--line); }
+        .metrics div:nth-last-child(-n+3) { border-bottom: 0; }
+      }
+
+      @media (max-width: 600px) {
+        .plan { grid-template-columns: 1fr; }
+        .form { padding: 4px 16px 16px; }
+        .field { grid-template-columns: 1fr; gap: 6px; }
+        .field > label, .field > .lbl { padding-top: 0; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="bar">
+        <span class="logo"><i></i>勤怠管理</span>
+        <div class="user"><span>中山 陽介</span><span class="avatar" aria-hidden="true">中</span></div>
+      </div>
+    </header>
+
+    <main>
+      <div class="title">
+        <h1 class="num">2026/02/03(火)</h1>
+        <p>日次勤怠</p>
+      </div>
+
+      <div class="layout">
+        <aside class="side">
+          <section class="card" aria-label="カレンダー">
+            <div class="cal-nav">
+              <button class="arrow" type="button" aria-label="前の月">&lt;</button>
+              <select aria-label="年月">
+                <option>2026/01</option>
+                <option selected>2026/02</option>
+                <option>2026/03</option>
+              </select>
+              <button class="arrow" type="button" aria-label="次の月">&gt;</button>
+            </div>
+            <div class="cal num">
+              <span class="w">日</span><span class="w">月</span><span class="w">火</span><span class="w">水</span><span class="w">木</span><span class="w">金</span><span class="w">土</span>
+              <button type="button" class="today">1</button><button type="button">2</button><button type="button" aria-current="date">3</button><button type="button">4</button><button type="button">5</button><button type="button">6</button><button type="button">7</button>
+              <button type="button">8</button><button type="button">9</button><button type="button">10</button><button type="button">11</button><button type="button">12</button><button type="button">13</button><button type="button">14</button>
+              <button type="button">15</button><button type="button">16</button><button type="button">17</button><button type="button">18</button><button type="button">19</button><button type="button">20</button><button type="button">21</button>
+              <button type="button">22</button><button type="button">23</button><button type="button">24</button><button type="button">25</button><button type="button">26</button><button type="button">27</button><button type="button">28</button>
+            </div>
+          </section>
+
+          <section class="card totals" aria-label="累計情報">
+            <h2>累計情報</h2>
+            <dl class="num">
+              <div><dt>年間36協定対象時間</dt><dd>365.50</dd></div>
+              <div><dt>月間36協定対象時間</dt><dd>0:00</dd></div>
+              <div><dt>フレックス時間</dt><dd>0:00</dd></div>
+              <div><dt>所定外相当</dt><dd>0:00</dd></div>
+              <div><dt>深夜時間</dt><dd>0:00</dd></div>
+              <div><dt>法内時間外時間</dt><dd>0:00</dd></div>
+              <div><dt>遅刻時間</dt><dd>0:00</dd></div>
+              <div><dt>早退時間</dt><dd>0:00</dd></div>
+              <div><dt>総実労働時間</dt><dd>0:00</dd></div>
+              <div><dt>不就業時間</dt><dd>0:00</dd></div>
+              <div><dt>指定出勤</dt><dd>0</dd></div>
+              <div><dt>出社回数</dt><dd>0</dd></div>
+              <div><dt>時間単位休暇(無給)</dt><dd>0:00</dd></div>
+            </dl>
+          </section>
+        </aside>
+
+        <div class="content">
+          <section class="card" aria-label="日次情報">
+            <h2>日次情報</h2>
+            <div class="plan">
+              <div>
+                <small>勤務予定</small>
+                <b class="num">出勤(フレックス(0815-1630))(8:15〜16:30)</b>
+              </div>
+              <div>
+                <small>各種申請</small>
+                <b class="empty">申請はありません</b>
+              </div>
+            </div>
+            <div class="metrics">
+              <div><small>36協定対象時間</small><b class="num">—</b></div>
+              <div><small>フレックス時間</small><b class="num">—</b></div>
+              <div><small>所定外相当</small><b class="num">—</b></div>
+              <div><small>深夜時間</small><b class="num">—</b></div>
+              <div><small>法内時間外時間</small><b class="num">—</b></div>
+              <div><small>遅刻時間</small><b class="num">—</b></div>
+              <div><small>早退時間</small><b class="num">—</b></div>
+              <div><small>総実労働時間</small><b class="num">—</b></div>
+              <div><small>不就業時間</small><b class="num">—</b></div>
+              <div><small>指定出勤</small><b class="num">—</b></div>
+              <div><small>出社回数</small><b class="num">—</b></div>
+              <div><small>時間単位休暇(無給)</small><b class="num">—</b></div>
+            </div>
+          </section>
+
+          <section class="card" aria-label="勤怠入力">
+            <h2>勤怠入力</h2>
+            <form class="form" onsubmit="return false">
+              <div class="field">
+                <label for="kubun">勤務区分<span class="req">必須</span></label>
+                <div class="ctl">
+                  <select id="kubun" style="min-width:160px">
+                    <option selected>出勤</option>
+                    <option>休暇</option>
+                    <option>休日</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="field">
+                <span class="lbl">出社/退社時刻</span>
+                <div class="ctl">
+                  <input class="time num" type="text" value="8:45" aria-label="出社時刻">
+                  <span class="sep">〜</span>
+                  <input class="time num" type="text" value="16:30" aria-label="退社時刻">
+                </div>
+              </div>
+
+              <div class="field">
+                <span class="lbl">打刻出社/退社</span>
+                <div class="ctl">
+                  <input class="time blank num" type="text" aria-label="打刻出社">
+                  <span class="sep">〜</span>
+                  <input class="time blank num" type="text" aria-label="打刻退社">
+                  <p class="hint">PC起動がなければ、打刻出社/退社は空欄のままにします。</p>
+                </div>
+              </div>
+
+              <div class="field">
+                <span class="lbl">勤務項目</span>
+                <div class="ctl">
+                  <button class="btn" type="button">選択</button>
+                  <div class="chips">
+                    <span class="chip">早朝運転(5:00-7:00)</span>
+                    <span class="chip">深夜運転(22:00-5:00)</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="memo">備考</label>
+                <div class="ctl"><textarea id="memo" placeholder="備考を入力">初日オリエンのため</textarea></div>
+              </div>
+            </form>
+          </section>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>
